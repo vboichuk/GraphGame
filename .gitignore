@@ -2,6 +2,7 @@ proj.android/
 proj.ios_mac/
 proj.linux/
 bin/
+win32-build/*.vcxproj*
 win32-build/bin/
 win32-build/Debug/
 win32-build/win32/Debug/
@@ -10,4 +11,6 @@ win32-build/engine/cocos/*/*.dir/Debug/
 win32-build/engine/external/*/Debug/
 win32-build/engine/external/*/*.dir/Debug/
 win32-build/lib/Debug/
-
+win32-build/CMakeCache.txt
+win32-build/CMakeFiles/
+win32-build/
