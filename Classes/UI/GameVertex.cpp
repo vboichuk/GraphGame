@@ -33,6 +33,16 @@ bool GameVertex::init()
 		addChild(node);
 	}
 
+	{
+		auto text = StringUtils::toString(id);
+		m_debug_label = Label::createWithTTF(text, "fonts/arial.ttf", 12);
+		m_debug_label->setAnchorPoint(Point::ANCHOR_MIDDLE);
+		m_debug_label->setIgnoreAnchorPointForPosition(false);
+		m_debug_label->setPosition(_contentSize / 2);
+		m_debug_label->setColor(Color3B::BLACK);
+		addChild(m_debug_label);
+	}
+
 	return true;
 }
 

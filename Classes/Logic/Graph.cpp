@@ -260,6 +260,11 @@ bool GraphConfig::moveChip(tChipId chip_id, tID vert_id, std::vector<tID>& path)
 	return true;
 }
 
+bool GraphConfig::isAllChipsOK() const
+{
+	return m_chips == m_chips_order;
+}
+
 Vertex* GraphConfig::getVertex(tID id)
 {
 	if (auto it = m_vertexes.find(id); it != m_vertexes.end())
@@ -290,7 +295,7 @@ bool GraphConfig::fromFile(const char* path)
 			float x, y;
 			ok &= readValues(file, x, y);
 			if (ok)
-				m_vertexes.emplace(vid, Vertex{ vid, x - 1, y - 1 });
+				m_vertexes.emplace(vid, Vertex{ vid, x, y });
 			else
 				break;
 		}
@@ -305,13 +310,13 @@ bool GraphConfig::fromFile(const char* path)
 		{
 			tID v1, v2;
 			ok &= readValues(file, v1, v2);
-			m_edges.emplace_back(v1-1, v2-1);
+			m_edges.emplace_back(v1, v2);
 		}
 
 		file.close();
 
-		std::transform(std::begin(m_chips), std::end(m_chips), std::begin(m_chips), [](tID id) { return id - 1; });
-		std::transform(std::begin(m_chips_order), std::end(m_chips_order), std::begin(m_chips_order), [](tID id) { return id - 1; });
+		// std::transform(std::begin(m_chips), std::end(m_chips), std::begin(m_chips), [](tID id) { return id - 1; });
+		// std::transform(std::begin(m_chips_order), std::end(m_chips_order), std::begin(m_chips_order), [](tID id) { return id - 1; });
 		setupConnections();
 		lockVertexes();
 
@@ -337,7 +342,7 @@ bool GraphConfig::readValues(std::ifstream& file, OUT float& val2, OUT float& va
 	std::string line;
 	if (getline(file, line))
 	{
-		auto res = sscanf(line.c_str(), "%f,%f", &val2, &val3);
+		auto res = sscanf(line.c_str(), "%f %f", &val2, &val3);
 		return true; // res == 1;
 	}
 	return false;
@@ -348,7 +353,7 @@ bool GraphConfig::readValues(std::ifstream& file, OUT tID& val2, OUT tID& val3)
 	std::string line;
 	if (getline(file, line))
 	{
-		auto res = sscanf(line.c_str(), "%d,%d", &val2, &val3);
+		auto res = sscanf(line.c_str(), "%d %d", &val2, &val3);
 		return true; // res == 1;
 	}
 	return false;
@@ -360,7 +365,6 @@ bool GraphConfig::readVector(std::ifstream& file, OUT std::vector<tID>& vector)
 	if (!getline(file, line))
 		return false;
 
-	std::replace(line.begin(), line.end(), ',', ' ');
 	std::stringstream stream(line);
 	std::vector<int> values(
 		(std::istream_iterator<tID>(stream)), // begin

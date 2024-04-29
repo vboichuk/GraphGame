@@ -33,7 +33,7 @@ bool GameScene::init()
 
 bool GameScene::initGame()
 {
-	m_graph->fromFile(FileUtils::getInstance()->fullPathForFilename("Levels/level1.txt").c_str());
+	m_graph->fromFile(FileUtils::getInstance()->fullPathForFilename("Levels/level2.txt").c_str());
 
 	initEdges();
 	initVertexes();
@@ -155,9 +155,11 @@ bool GameScene::initMenu()
 	menu->setPosition(Vec2::ZERO);
 	this->addChild(menu);
 
-	auto btn = MenuItemImage::create("Load.png", "Load.png");
+	auto normal = Sprite::create("Load.png");
+	auto selected = Sprite::create("Load.png");
+	auto btn = MenuItemSprite::create(normal, selected);
 	btn->setCallback(std::bind(&GameScene::onLoadClick, this, std::placeholders::_1));
-	btn->setPosition(100, 500);
+	btn->setPosition(100 + btn->getContentSize().width / 2, 700);
 	menu->addChild(btn);
 
 	return true;
@@ -216,6 +218,9 @@ void GameScene::moveChip(tChipId chip_id, tID id)
 			auto move_to = MoveTo::create(0.2f, Point(x, y));
 			actions.pushBack(move_to);
 		}
+
+		actions.pushBack(CallFunc::create([this]() { this->checkCongratulations(); }));
+
 		auto sequence = Sequence::create(actions);
 		m_chips[m_selected_chip_id]->runAction(sequence);
 	}
@@ -236,5 +241,26 @@ void GameScene::glowAvailableVertexes()
 		bool available = available_verts.find(id) != available_verts.end();
 		v->setGlow(available);
 		v->setEnabled(available);
+	}
+}
+
+void GameScene::checkCongratulations()
+{
+	if (m_graph->isAllChipsOK())
+	{
+		auto label = Label::createWithTTF("Congratulations", "fonts/arial.ttf", 20);
+		label->setAnchorPoint(Point::ANCHOR_MIDDLE);
+		label->setIgnoreAnchorPointForPosition(false);
+		label->setPosition(_contentSize / 2);
+		label->setColor(Color3B::BLACK);
+		addChild(label, getChildrenCount());
+
+		Vector<FiniteTimeAction*> actions;
+		actions.pushBack(ScaleTo::create(2.f, 2.f));
+		actions.pushBack(DelayTime::create(2.f));
+		actions.pushBack(FadeOut::create(1.f));
+		actions.pushBack(RemoveSelf::create());
+		auto sequence = Sequence::create(actions);
+		label->runAction(sequence);
 	}
 }

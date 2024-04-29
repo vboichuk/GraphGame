@@ -29,6 +29,9 @@ public:
 	
 	CREATE_FUNC(GameScene);
 
+	void checkCongratulations();
+
+
 protected:
 	GraphConfig* m_graph = nullptr;
 	GameChip* m_selected_item = nullptr;

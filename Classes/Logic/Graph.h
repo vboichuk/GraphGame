@@ -79,7 +79,7 @@ public:
     const auto& getChipsOrder() const { return m_chips_order; }
     tID getVertexId(tChipId chip_id) const;
     bool moveChip(tChipId chip_id, tID vert_id, OUT std::vector<tID>& path);
-
+    bool isAllChipsOK() const;
     bool fromFile(const char* path);
 
 protected:
