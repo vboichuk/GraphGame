@@ -34,7 +34,6 @@ bool GameScene::init()
 bool GameScene::initGame()
 {
 	m_graph->fromFile(FileUtils::getInstance()->fullPathForFilename("Levels/level1.txt").c_str());
-	// m_graph->init();
 
 	initEdges();
 	initVertexes();
