@@ -82,6 +82,11 @@ public:
     bool isAllChipsOK() const;
     bool fromFile(const char* path);
 
+    bool empty() const
+    {
+        return m_vertexes.empty() || m_edges.empty();
+    }
+
 protected:
     Vertex* getVertex(tID id);
 

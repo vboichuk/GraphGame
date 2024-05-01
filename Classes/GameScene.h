@@ -41,5 +41,7 @@ protected:
 	std::shared_ptr<GraphView> m_graph_view = nullptr;
 	std::shared_ptr<GraphView> m_preview = nullptr;
 	GameLogic* m_logic = nullptr;
+
+	Label* m_error_label = nullptr;
 };
 

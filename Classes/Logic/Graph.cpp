@@ -298,11 +298,17 @@ bool GraphConfig::fromFile(const char* path)
 			else
 				break;
 		}
+
+		// validation
 		ok = ok && (vertex_num == m_vertexes.size());
 
 		ok = ok && readVector(file, m_chips);
 		ok = ok && readVector(file, m_chips_order);
+		
+		// validation
 		ok = ok && (m_chips.size() == m_chips_order.size());
+		ok = ok && std::all_of(m_chips.begin(), m_chips.end(), [vertex_num](auto id) { return id > 0 && id <= vertex_num; });
+		ok = ok && std::all_of(m_chips_order.begin(), m_chips_order.end(), [vertex_num](auto id) { return id > 0 && id <= vertex_num; });
 
 		size_t edges_num = 0;
 		ok = ok && readValue(file, edges_num);
@@ -311,8 +317,12 @@ bool GraphConfig::fromFile(const char* path)
 		{
 			tID v1, v2;
 			ok = ok && readValues(file, v1, v2);
-			m_edges.emplace_back(v1-1, v2-1);
+			if (ok)
+				m_edges.emplace_back(v1-1, v2-1);
 		}
+
+		// validation
+		ok = ok && std::all_of(m_edges.begin(), m_edges.end(), [vertex_num](auto kvp) { return kvp.first >= 0 && kvp.first < vertex_num && kvp.second >= 0 && kvp.second < vertex_num; });
 
 		file.close();
 

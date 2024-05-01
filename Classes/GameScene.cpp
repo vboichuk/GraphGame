@@ -34,7 +34,18 @@ bool GameScene::init()
 	{
 		return false;
 	}
-	
+
+	{
+		auto label = Label::createWithTTF("OLOLO", "fonts/arial.ttf", 20);
+		label->setAnchorPoint(Point::ANCHOR_MIDDLE_LEFT);
+		label->setIgnoreAnchorPointForPosition(false);
+		label->setPosition(20, 20);
+		label->setColor(Color3B::RED);
+		label->setVisible(false);
+		addChild(label, getChildrenCount());
+		m_error_label = label;
+	}
+
 	initBackground();
 	initMenu();
 	initGame();
@@ -60,7 +71,10 @@ bool GameScene::initGame()
 		addChild(m_preview.get());
 	}
 
-	m_graph->fromFile(FileUtils::getInstance()->fullPathForFilename("Levels/level.txt").c_str());
+	const std::string path = "Levels/level.txt";
+	m_graph->fromFile(FileUtils::getInstance()->fullPathForFilename(path).c_str());
+	m_error_label->setString(std::string("Invalid file format '") + path + "'");
+	m_error_label->setVisible(m_graph->empty());
 	
 	m_graph_view->init(m_graph, m_graph->getChips());
 	m_preview->init(m_graph, m_graph->getChipsOrder());
