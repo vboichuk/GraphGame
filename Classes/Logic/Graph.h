@@ -83,7 +83,6 @@ public:
     bool fromFile(const char* path);
 
 protected:
-    void setVertexLocked(tID id, bool locked);
     Vertex* getVertex(tID id);
 
     bool readValue(std::ifstream& file, OUT size_t& val);

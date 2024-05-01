@@ -63,6 +63,8 @@ list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/GameScene.cpp
      Classes/Logic/Graph.cpp
+     Classes/Logic/GameLogic.cpp
+     Classes/UI/GraphView.cpp
      Classes/UI/GameVertex.cpp
      Classes/UI/GameEdge.cpp
      Classes/UI/GameChip.cpp     )

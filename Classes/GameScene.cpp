@@ -1,12 +1,26 @@
 
 #include "GameScene.h"
 
+#include <iostream>
+
 USING_NS_CC;
+
+GameScene::GameScene()
+{
+	std::cout << "~GameScene" << std::endl;
+
+	m_graph = new GraphConfig();
+	m_logic = new GameLogic();
+
+	m_logic->setOnFinishClb(std::bind(&GameScene::onFinish, this));
+}
 
 GameScene::~GameScene()
 {
-	if (m_graph)
-		delete m_graph, m_graph = nullptr;
+	cocos2d::log("~GameScene");
+
+	delete m_logic, m_logic = nullptr;
+	delete m_graph, m_graph = nullptr;
 }
 
 Scene* GameScene::createScene()
@@ -20,12 +34,9 @@ bool GameScene::init()
 	{
 		return false;
 	}
-
-	m_graph = new GraphConfig();
-
+	
 	initBackground();
 	initMenu();
-
 	initGame();
 
 	return true;
@@ -33,105 +44,28 @@ bool GameScene::init()
 
 bool GameScene::initGame()
 {
-	m_graph->fromFile(FileUtils::getInstance()->fullPathForFilename("Levels/level2.txt").c_str());
+	cocos2d::log("GameScene::initGame");
 
-	initEdges();
-	initVertexes();
-	initChips();
-
-	return true;
-}
-
-bool GameScene::initEdges()
-{
-	removeChildByName("Edges");
-
-	auto lc = Node::create();
-	this->addChild(lc, eZOrder::edges, "Edges");
-
-	const auto& edges = m_graph->getEdges();
+	if (m_graph_view == nullptr)
+	{
+		m_graph_view = std::make_shared<GraphView>();
+		addChild(m_graph_view.get());
+	}
 	
-	for (auto [id1, id2] : edges)
+	if (m_preview == nullptr)
 	{
-		 auto edge = GameEdge::create(m_graph, id1, id2);
-		 lc->addChild(edge);
-	}
-	return true;
-}
-
-bool GameScene::initVertexes()
-{
-	m_vertexes.clear();
-	removeChildByName("Vertexes", true);
-
-	auto menu = Menu::create();
-	menu->setPosition(Vec2::ZERO);
-	this->addChild(menu, eZOrder::vertex, "Vertexes");
-
-	const auto ids = m_graph->getVertexIds();
-	for (auto id : ids)
-	{
-		auto vert = GameVertex::create(id);
-		auto clb = std::bind(&GameScene::onVertexClick, this, std::placeholders::_1, id);
-		vert->setCallback(clb);
-		auto [x, y] = m_graph->getPosition(id);
-		vert->setPosition(x, y);
-		menu->addChild(vert);
-		m_vertexes[id] = vert;
+		m_preview = std::make_shared<GraphView>();
+		m_preview->setScale(0.3f);
+		m_preview->setPosition(600, 500);
+		addChild(m_preview.get());
 	}
 
-	return true;
-}
+	m_graph->fromFile(FileUtils::getInstance()->fullPathForFilename("Levels/level.txt").c_str());
+	
+	m_graph_view->init(m_graph, m_graph->getChips());
+	m_preview->init(m_graph, m_graph->getChipsOrder());
 
-static const std::vector<Color3B> colors {
-	Color3B(20, 255, 20), 
-	Color3B(255, 20, 20), 
-	Color3B(20, 20, 255), 
-	Color3B(255, 255, 20), 
-	Color3B(20, 255, 255), 
-	Color3B(255, 20, 255), 
-	Color3B(20, 255, 20), 
-};
-
-bool GameScene::initChips()
-{
-	m_selected_chip_id = -1;
-	m_chips.clear();
-	this->removeChildByName("Chips", true);
-	this->removeChildByName("ChipsOrder", true);
-
-	{
-		auto node = Node::create();
-		this->addChild(node, eZOrder::chip_tip, "ChipsOrder");
-
-		auto& chips = m_graph->getChipsOrder();
-		for (size_t i = 0; i < chips.size(); i++)
-		{
-			auto chip = GameChip::create(colors[i]);
-			chip->setScale(1.3f);
-			chip->setOpacity(80);
-			chip->setEnabled(false);
-			auto [x, y] = m_graph->getPosition(chips[i]);
-			chip->setPosition(x, y);
-			node->addChild(chip);
-		}
-	}
-
-	auto menu = Menu::create();
-	menu->setPosition(Vec2::ZERO);
-	this->addChild(menu, eZOrder::chips, "Chips");
-
-	auto& chips = m_graph->getChips();
-	for (size_t i = 0; i < chips.size(); i++)
-	{
-		auto chip = GameChip::create(colors[i]);
-		auto [x, y] = m_graph->getPosition(chips[i]);
-		chip->setPosition(x, y);
-		auto clb = std::bind(&GameScene::onChipClick, this, std::placeholders::_1, i);
-		chip->setCallback(clb);
-		menu->addChild(chip);
-		m_chips[i] = chip;
-	}
+	m_logic->init(m_graph_view, m_graph);
 
 	return true;
 }
@@ -165,102 +99,26 @@ bool GameScene::initMenu()
 	return true;
 }
 
-void GameScene::setSelectedChip(tChipId chip_id)
-{
-	if (m_selected_chip_id == chip_id)
-		return;
-
-	if (m_selected_chip_id >= 0)
-	{
-		m_chips.at(m_selected_chip_id)->setSelected(false);
-	}
-
-	m_selected_chip_id = chip_id;
-
-	if (m_selected_chip_id >= 0)
-	{
-		m_chips.at(m_selected_chip_id)->setSelected(true);
-	}
-
-	glowAvailableVertexes();
-}
-
-void GameScene::onVertexClick(Ref*, tID id)
-{
-	if (m_selected_chip_id < 0)
-		return;
-
-	moveChip(m_selected_chip_id, id);
-}
-
-void GameScene::onChipClick(Ref*, tChipId chip_id)
-{
-	CCLOG("click (%d)", chip_id);
-	setSelectedChip(chip_id);
-}
 
 void GameScene::onLoadClick(Ref*)
 {
 	initGame();
 }
 
-void GameScene::moveChip(tChipId chip_id, tID id)
+void GameScene::onFinish()
 {
-	std::vector<tID> path;
-	const auto from_id = m_graph->getVertexId(chip_id);
-	const auto success = m_graph->moveChip(chip_id, id, OUT path);
-	if (success)
-	{
-		Vector<FiniteTimeAction*> actions;
-		for (auto id : path)
-		{
-			const auto [x, y] = m_graph->getPosition(id);
-			auto move_to = MoveTo::create(0.2f, Point(x, y));
-			actions.pushBack(move_to);
-		}
+	auto label = Label::createWithTTF("You win!", "fonts/arial.ttf", 20);
+	label->setAnchorPoint(Point::ANCHOR_MIDDLE);
+	label->setIgnoreAnchorPointForPosition(false);
+	label->setPosition(_contentSize / 2);
+	label->setColor(Color3B::BLACK);
+	addChild(label, getChildrenCount());
 
-		actions.pushBack(CallFunc::create([this]() { this->checkCongratulations(); }));
-
-		auto sequence = Sequence::create(actions);
-		m_chips[m_selected_chip_id]->runAction(sequence);
-	}
-
-	glowAvailableVertexes();
-}
-
-void GameScene::glowAvailableVertexes()
-{
-	if (m_selected_chip_id < 0)
-		return;
-
-	const auto vert_id = m_graph->getVertexId(m_selected_chip_id);
-
-	auto available_verts = m_graph->getAvailableVertexes(vert_id);
-	for (auto [id, v] : m_vertexes)
-	{
-		bool available = available_verts.find(id) != available_verts.end();
-		v->setGlow(available);
-		v->setEnabled(available);
-	}
-}
-
-void GameScene::checkCongratulations()
-{
-	if (m_graph->isAllChipsOK())
-	{
-		auto label = Label::createWithTTF("Congratulations", "fonts/arial.ttf", 20);
-		label->setAnchorPoint(Point::ANCHOR_MIDDLE);
-		label->setIgnoreAnchorPointForPosition(false);
-		label->setPosition(_contentSize / 2);
-		label->setColor(Color3B::BLACK);
-		addChild(label, getChildrenCount());
-
-		Vector<FiniteTimeAction*> actions;
-		actions.pushBack(ScaleTo::create(2.f, 2.f));
-		actions.pushBack(DelayTime::create(2.f));
-		actions.pushBack(FadeOut::create(1.f));
-		actions.pushBack(RemoveSelf::create());
-		auto sequence = Sequence::create(actions);
-		label->runAction(sequence);
-	}
+	Vector<FiniteTimeAction*> actions;
+	actions.pushBack(ScaleTo::create(2.f, 2.f));
+	actions.pushBack(DelayTime::create(2.f));
+	actions.pushBack(FadeOut::create(1.f));
+	actions.pushBack(RemoveSelf::create());
+	auto sequence = Sequence::create(actions);
+	label->runAction(sequence);
 }

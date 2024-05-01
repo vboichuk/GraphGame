@@ -25,6 +25,5 @@ public:
 protected:
 	bool m_is_glowing = false;
 	Node* m_glow_image = nullptr;
-	Label* m_debug_label = nullptr;
 };
 
