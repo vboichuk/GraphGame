@@ -171,7 +171,6 @@ void GraphConfig::lockVertexes()
 
 auto GraphConfig::getPosition(const int id) const -> std::pair<float, float>
 {
-	// TODO
 	if (auto it = m_vertexes.find(id); it != m_vertexes.end())
 	{
 		return it->second.getPosition();

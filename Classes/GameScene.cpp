@@ -36,7 +36,7 @@ bool GameScene::init()
 	}
 
 	{
-		auto label = Label::createWithTTF("OLOLO", "fonts/arial.ttf", 20);
+		auto label = Label::createWithTTF("", "fonts/arial.ttf", 20);
 		label->setAnchorPoint(Point::ANCHOR_MIDDLE_LEFT);
 		label->setIgnoreAnchorPointForPosition(false);
 		label->setPosition(20, 20);
